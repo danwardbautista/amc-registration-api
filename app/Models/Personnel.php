@@ -38,15 +38,78 @@ class Personnel extends Model
     public static function rules(): array
     {
         return [
-            'prefix' => 'required|string|max:20|regex:/^[a-zA-Z.\s]+$/',
-            'first_name' => 'required|string|max:100|regex:/^[a-zA-Z\s\'-]+$/',
-            'last_name' => 'required|string|max:100|regex:/^[a-zA-Z\s\'-]+$/',
+            'prefix' => [
+                'required',
+                'string',
+                'min:2',
+                'max:20',
+                'regex:/^[\p{L}.]+[\p{L}.\s]*[\p{L}.]$/u',
+                function ($attribute, $value, $fail) {
+                    if (
+                        preg_match('/[.]{2,}/', $value) ||
+                        preg_match('/[\s]{2,}/', $value)
+                    ) {
+                        $fail('The prefix format is invalid.');
+                    }
+                }
+            ],
+            'first_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:100',
+                'regex:/^[\p{L}]+[\p{L}\s\'-]*[\p{L}]$/u',
+                function ($attribute, $value, $fail) {
+                    if (
+                        preg_match('/[\s]{2,}/', $value) ||
+                        preg_match('/[\-]{2,}/', $value) ||
+                        preg_match('/[\'][\']/', $value)
+                    ) {
+                        $fail('The first name format is invalid.');
+                    }
+                }
+            ],
+            'last_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:100',
+                'regex:/^[\p{L}]+[\p{L}\s\'-]*[\p{L}]$/u',
+                function ($attribute, $value, $fail) {
+                    if (
+                        preg_match('/[\s]{2,}/', $value) ||
+                        preg_match('/[\-]{2,}/', $value) ||
+                        preg_match('/[\'][\']/', $value)
+                    ) {
+                        $fail('The last name format is invalid.');
+                    }
+                }
+            ],
             'mobile_number' => [
                 'required',
                 'string',
+                'min:7',
                 'max:20',
-                'regex:/^[\+]?[0-9\s\-\(\)]+$/', 
+                'regex:/^(\+?[1-9]\d{0,3})?[\s\-\(\)]?[1-9][\d\s\-\(\)]*\d$/',
                 function ($attribute, $value, $fail) {
+                    $cleaned = preg_replace('/[^\+0-9]/', '', $value);
+
+                    $digitCount = strlen(preg_replace('/[^\d]/', '', $cleaned));
+                    if ($digitCount < 7) {
+                        $fail('The mobile number must contain at least 7 digits.');
+                    }
+
+                    if (
+                        preg_match('/^[\+\-\s\(\)]+$/', $value) ||
+                        preg_match('/[\+]{2,}/', $value) ||
+                        preg_match('/[\-]{3,}/', $value) ||
+                        preg_match('/[\s]{3,}/', $value) ||
+                        preg_match('/[\(\)]{3,}/', $value) ||
+                        preg_match('/\+.*\+/', $value)
+                    ) {
+                        $fail('The mobile number format is invalid.');
+                    }
+
                     $exists = self::where('mobile_number', $value)
                         ->whereNull('deleted_at')
                         ->exists();
@@ -58,6 +121,7 @@ class Personnel extends Model
             'email' => [
                 'required',
                 'email:rfc,dns',
+                'min:5',
                 'max:255',
                 function ($attribute, $value, $fail) {
                     $exists = self::where('email', $value)
@@ -71,20 +135,85 @@ class Personnel extends Model
         ];
     }
 
-    // Updating rules validation
     public static function updateRules($id): array
     {
         return [
-            'prefix' => 'sometimes|required|string|max:20|regex:/^[a-zA-Z.\s]+$/',
-            'first_name' => 'sometimes|required|string|max:100|regex:/^[a-zA-Z\s\'-]+$/',
-            'last_name' => 'sometimes|required|string|max:100|regex:/^[a-zA-Z\s\'-]+$/',
+            'prefix' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:2',
+                'max:20',
+                'regex:/^[\p{L}.]+[\p{L}.\s]*[\p{L}.]$/u',
+                function ($attribute, $value, $fail) {
+                    if (
+                        preg_match('/[.]{2,}/', $value) ||
+                        preg_match('/[\s]{2,}/', $value)
+                    ) {
+                        $fail('The prefix format is invalid.');
+                    }
+                }
+            ],
+            'first_name' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:2',
+                'max:100',
+                'regex:/^[\p{L}]+[\p{L}\s\'-]*[\p{L}]$/u',
+                function ($attribute, $value, $fail) {
+                    if (
+                        preg_match('/[\s]{2,}/', $value) ||
+                        preg_match('/[\-]{2,}/', $value) ||
+                        preg_match('/[\'][\']/', $value)
+                    ) {
+                        $fail('The first name format is invalid.');
+                    }
+                }
+            ],
+            'last_name' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:2',
+                'max:100',
+                'regex:/^[\p{L}]+[\p{L}\s\'-]*[\p{L}]$/u',
+                function ($attribute, $value, $fail) {
+                    if (
+                        preg_match('/[\s]{2,}/', $value) ||
+                        preg_match('/[\-]{2,}/', $value) ||
+                        preg_match('/[\'][\']/', $value)
+                    ) {
+                        $fail('The last name format is invalid.');
+                    }
+                }
+            ],
             'mobile_number' => [
                 'sometimes',
                 'required',
                 'string',
+                'min:7',
                 'max:20',
-                'regex:/^[\+]?[0-9\s\-\(\)]+$/', // 2. Input sanitization for mobile
+                'regex:/^(\+?[1-9]\d{0,3})?[\s\-\(\)]?[1-9][\d\s\-\(\)]*\d$/',
                 function ($attribute, $value, $fail) use ($id) {
+                    $cleaned = preg_replace('/[^\+0-9]/', '', $value);
+
+                    $digitCount = strlen(preg_replace('/[^\d]/', '', $cleaned));
+                    if ($digitCount < 7) {
+                        $fail('The mobile number must contain at least 7 digits.');
+                    }
+
+                    if (
+                        preg_match('/^[\+\-\s\(\)]+$/', $value) ||
+                        preg_match('/[\+]{2,}/', $value) ||
+                        preg_match('/[\-]{3,}/', $value) ||
+                        preg_match('/[\s]{3,}/', $value) ||
+                        preg_match('/[\(\)]{3,}/', $value) ||
+                        preg_match('/\+.*\+/', $value)
+                    ) {
+                        $fail('The mobile number format is invalid.');
+                    }
+
                     $exists = self::where('mobile_number', $value)
                         ->where('id', '!=', $id)
                         ->whereNull('deleted_at')
@@ -98,6 +227,7 @@ class Personnel extends Model
                 'sometimes',
                 'required',
                 'email:rfc,dns',
+                'min:5',
                 'max:255',
                 function ($attribute, $value, $fail) use ($id) {
                     $exists = self::where('email', $value)
@@ -129,29 +259,29 @@ class Personnel extends Model
     private function sanitizeName($value)
     {
         if (!is_string($value)) return $value;
-        
+
         $value = preg_replace('/[^\p{L}\s\'-]/u', '', $value);
         $value = preg_replace('/\s+/', ' ', trim($value));
-        
+
         return $value;
     }
 
     private function sanitizeMobileNumber($value)
     {
         if (!is_string($value)) return $value;
-        
+
         $value = preg_replace('/[^\d\+\-\s\(\)]/', '', $value);
         $value = trim($value);
-        
+
         return $value;
     }
 
     private function sanitizeEmail($value)
     {
         if (!is_string($value)) return $value;
-        
+
         $value = filter_var(trim(strtolower($value)), FILTER_SANITIZE_EMAIL);
-        
+
         return $value;
     }
 
@@ -163,9 +293,9 @@ class Personnel extends Model
             if (Auth::check()) {
                 $model->created_by = Auth::id();
                 $model->updated_by = Auth::id();
-                
+
                 Log::info('Personnel record created', [
-                    'personnel_id' => null, 
+                    'personnel_id' => null,
                     'action' => 'create',
                     'user_id' => Auth::id(),
                     'ip_address' => request()->ip(),
@@ -189,7 +319,7 @@ class Personnel extends Model
         static::updating(function ($model) {
             if (Auth::check()) {
                 $model->updated_by = Auth::id();
-                
+
                 $changes = $model->getDirty();
                 $logData = [
                     'personnel_id' => $model->id,
@@ -200,14 +330,14 @@ class Personnel extends Model
                     'changed_fields' => array_keys($changes),
                     'timestamp' => now()
                 ];
-                
+
                 if (array_key_exists('email', $changes)) {
                     $logData['email_changed'] = true;
                 }
                 if (array_key_exists('mobile_number', $changes)) {
                     $logData['mobile_changed'] = true;
                 }
-                
+
                 Log::info('Personnel record updated', $logData);
             }
         });
@@ -255,27 +385,27 @@ class Personnel extends Model
     public function getMaskedEmailAttribute(): string
     {
         if (empty($this->email)) return '';
-        
+
         $parts = explode('@', $this->email);
         if (count($parts) !== 2) return '***';
-        
+
         $username = $parts[0];
         $domain = $parts[1];
-        
+
         $maskedUsername = substr($username, 0, 2) . str_repeat('*', max(0, strlen($username) - 2));
-        
+
         return $maskedUsername . '@' . $domain;
     }
 
     public function getMaskedMobileAttribute(): string
     {
         if (empty($this->mobile_number)) return '';
-        
+
         $mobile = preg_replace('/\D/', '', $this->mobile_number);
         $length = strlen($mobile);
-        
+
         if ($length <= 4) return str_repeat('*', $length);
-        
+
         return substr($mobile, 0, 2) . str_repeat('*', $length - 4) . substr($mobile, -2);
     }
 }
