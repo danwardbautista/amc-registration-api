@@ -48,6 +48,7 @@ class AuthController extends Controller
 
             return response([
                 'message' => 'Invalid input provided.',
+                'errors' => $validator->errors()->toArray()
             ], 422);
         }
 
