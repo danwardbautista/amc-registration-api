@@ -36,3 +36,14 @@ Serve in port 8000
 ```shell
 php artisan serve
 ```
+## Running Docker
+### Local Setup
+1. Duplicate `env.example` and change the name to `.env`.
+2. Configure `.env` database section.
+3. Create the first user, you need to setup `INITIAL_PASSWORD` and `INITIAL_EMAIL` at `.env` which will be your initial login.
+
+### Local
+Run the bash commands
+```shell
+docker-compose up -d --build
+```
