@@ -163,24 +163,22 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            $tokenCount = $user->tokens()->count();
-            $user->tokens()->delete();
+            $request->user()->currentAccessToken()->delete();
 
             // Logout log
-            Log::info('User logout from all devices', [
+            Log::info('User logout from current device', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'tokens_revoked' => $tokenCount,
+                'tokens_revoked' => 1,
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
 
             return response([
-                'message' => 'Logged out from all devices successfully!',
-                'tokens_revoked' => $tokenCount,
+                'message' => 'Logged out successfully!',
+                'tokens_revoked' => 1,
             ], 200);
         } catch (\Exception $e) {
-
             return response([
                 'message' => 'An error occurred during logout.',
             ], 500);
