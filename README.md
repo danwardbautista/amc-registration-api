@@ -3,10 +3,10 @@
 Secured backend API registration
 
 ## Live API
-https://example.com/
+https://amcapi.danwardbautista.com/
 
 ## API Documentation
-https://example.com/
+https://documenter.getpostman.com/view/16609457/2sB2xEBoMy
 
 ## Prerequisite
 1. Composer
